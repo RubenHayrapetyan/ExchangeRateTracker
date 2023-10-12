@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -41,7 +40,6 @@ fun BottomBar(navController: NavHostController) {
     BottomBarScreen.Currencies,
     BottomBarScreen.Favorites,
   )
-
   val navStackBackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navStackBackEntry?.destination
   val outlineColor = colorResource(id = R.color.outline)
@@ -109,31 +107,31 @@ private fun BottomBarItem(
         val (icon, text, selectedBox) = createRefs()
 
         if (selected) {
-          Box(modifier = Modifier
-            .sizeIn(minHeight = 4.dp)
-            .constrainAs(selectedBox) {
-              start.linkTo(text.start, margin = (-4).dp)
-              end.linkTo(text.end, margin = (-4).dp)
-              top.linkTo(icon.top, margin = (-4).dp)
-              bottom.linkTo(text.top, margin = 4.dp)
-              width = Dimension.fillToConstraints
-              height = Dimension.fillToConstraints
-            }
-            .background(background, shape = CircleShape)
+          Box(
+            modifier = Modifier
+              .constrainAs(selectedBox) {
+                start.linkTo(text.start, margin = (-4).dp)
+                end.linkTo(text.end, margin = (-4).dp)
+                top.linkTo(icon.top, margin = (-4).dp)
+                bottom.linkTo(text.top, margin = 4.dp)
+                width = Dimension.fillToConstraints
+                height = Dimension.fillToConstraints
+              }
+              .background(background, shape = CircleShape)
           )
         }
 
         Icon(
-          painter = painterResource(id = screen.icon),
-          contentDescription = "icon",
-          tint = iconTintColor,
           modifier = Modifier
             .constrainAs(icon) {
               start.linkTo(text.start)
               end.linkTo(text.end)
               bottom.linkTo(text.top, margin = 8.dp)
               width = Dimension.fillToConstraints
-            }
+            },
+          painter = painterResource(id = screen.icon),
+          contentDescription = "icon",
+          tint = iconTintColor
         )
 
         Text(
