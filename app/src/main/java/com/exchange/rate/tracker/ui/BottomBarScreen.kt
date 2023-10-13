@@ -44,7 +44,7 @@ fun BottomBar(navController: NavHostController) {
   val currentDestination = navStackBackEntry?.destination
   val outlineColor = colorResource(id = R.color.outline)
 
-  Column {
+  Column(modifier = Modifier.background(color = colorResource(id = R.color.on_primary))) {
     Canvas(
       modifier = Modifier
         .height(1.dp)
@@ -87,7 +87,7 @@ private fun BottomBarItem(
   val textColor: Color =
     if (selected) colorResource(id = R.color.text_default) else colorResource(id = R.color.secondary)
   val background: Color =
-    if (selected) colorResource(id = R.color.secondary).copy(alpha = 0.5f) else Transparent
+    if (selected) colorResource(id = R.color.light_primary) else Transparent
 
   Box(
     modifier = Modifier

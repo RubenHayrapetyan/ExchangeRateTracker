@@ -18,5 +18,5 @@
   <color name="yellow">#FFB800</color>
   
   <color name="header">#F6F6F6</color>
-  <color name="card">#F0F2F8</color>
+  <color name="bg_card">#F0F2F8</color>
 </resources>
