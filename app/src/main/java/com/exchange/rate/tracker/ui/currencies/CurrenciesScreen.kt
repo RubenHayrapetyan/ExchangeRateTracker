@@ -69,6 +69,17 @@ fun CurrenciesScreen() {
       color = colorResource(id = R.color.text_default)
     )
 
+    CurrenciesContent(
+      modifier = Modifier.constrainAs(currencies) {
+        top.linkTo(background.bottom, margin = 16.dp)
+        start.linkTo(parent.start, margin = 16.dp)
+        end.linkTo(parent.end, margin = 16.dp)
+        bottom.linkTo(parent.bottom)
+        width = Dimension.fillToConstraints
+        height = Dimension.fillToConstraints
+      }
+    )
+
     DropdownScreen(
       modifier = Modifier
         .constrainAs(dropDown) {
@@ -87,17 +98,6 @@ fun CurrenciesScreen() {
           top.linkTo(title.bottom, margin = 12.dp)
         }
         .padding(bottom = 8.dp)
-    )
-
-    CurrenciesContent(
-      modifier = Modifier.constrainAs(currencies) {
-        top.linkTo(background.bottom, margin = 16.dp)
-        start.linkTo(parent.start, margin = 16.dp)
-        end.linkTo(parent.end, margin = 16.dp)
-        bottom.linkTo(parent.bottom)
-        width = Dimension.fillToConstraints
-        height = Dimension.fillToConstraints
-      }
     )
   }
 }
