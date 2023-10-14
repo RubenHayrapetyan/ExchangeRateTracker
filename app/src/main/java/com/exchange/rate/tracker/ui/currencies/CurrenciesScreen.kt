@@ -3,6 +3,7 @@ package com.exchange.rate.tracker.ui.currencies
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -29,12 +32,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.navigation.NavHostController
 import com.exchange.rate.tracker.DropdownItem
 import com.exchange.rate.tracker.R
+import com.exchange.rate.tracker.util.noRippleClickable
 import com.exchange.rate.tracker.ui.CurrenciesContent
+import com.exchange.rate.tracker.util.Constants
 
 @Composable
-fun CurrenciesScreen() {
+fun CurrenciesScreen(navHostController: NavHostController) {
 
   ConstraintLayout(
     modifier = Modifier
@@ -88,7 +94,7 @@ fun CurrenciesScreen() {
           top.linkTo(title.bottom, margin = 12.dp)
           width = Dimension.fillToConstraints
         }
-        .heightIn(min = 40.dp)
+        .heightIn(min = 48.dp)
     )
 
     Filter(
@@ -97,18 +103,17 @@ fun CurrenciesScreen() {
           end.linkTo(parent.end, margin = 16.dp)
           top.linkTo(title.bottom, margin = 12.dp)
         }
-        .padding(bottom = 8.dp)
+        .padding(bottom = 8.dp),
+      navHostController = navHostController
     )
   }
 }
 
 @Composable
-private fun Filter(modifier: Modifier = Modifier) {
-  Box(
-    modifier = modifier
-      .clickable {
+private fun Filter(modifier: Modifier = Modifier, navHostController: NavHostController) {
 
-      }
+  IconButton(
+    modifier = modifier
       .border(
         width = 1.dp,
         color = colorResource(id = R.color.secondary),
@@ -117,10 +122,12 @@ private fun Filter(modifier: Modifier = Modifier) {
       .background(
         color = colorResource(id = R.color.on_primary),
         shape = RoundedCornerShape(8.dp)
-      )
+      ),
+    onClick = {
+      navHostController.navigate(Constants.FILTERS_ROUTE)
+    }
   ) {
     Icon(
-      modifier = Modifier.padding(8.dp),
       painter = painterResource(id = R.drawable.ic_filter), contentDescription = "Filter",
       tint = colorResource(id = R.color.primary)
     )
@@ -128,7 +135,7 @@ private fun Filter(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun CustomDropdownMenu(
+private fun CustomDropdownMenu(
   modifier: Modifier = Modifier,
   items: List<DropdownItem>,
   selectedItemId: Int,
@@ -138,7 +145,7 @@ fun CustomDropdownMenu(
 
   Column(
     modifier = modifier
-      .clickable {
+      .noRippleClickable {
         expanded = !expanded
       }
       .border(
@@ -149,7 +156,8 @@ fun CustomDropdownMenu(
       .background(
         color = colorResource(id = R.color.on_primary),
         shape = RoundedCornerShape(8.dp)
-      )
+      ),
+    verticalArrangement = Arrangement.Center
   ) {
     val textColor = colorResource(id = R.color.text_default)
     val icArrow = if (expanded) {
@@ -161,7 +169,8 @@ fun CustomDropdownMenu(
     Row(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(horizontal = 16.dp, vertical = 8.dp),
+        .heightIn(min = 48.dp)
+        .padding(horizontal = 16.dp),
       verticalAlignment = Alignment.CenterVertically
     ) {
       Text(
@@ -184,7 +193,7 @@ fun CustomDropdownMenu(
         val selectedTextBackground = if (selectedItemId == item.id) {
           colorResource(id = R.color.light_primary)
         } else {
-          androidx.compose.ui.graphics.Color.Transparent
+          Color.Transparent
         }
 
         Text(
@@ -207,7 +216,7 @@ fun CustomDropdownMenu(
 }
 
 @Composable
-fun DropdownScreen(modifier: Modifier = Modifier) {
+private fun DropdownScreen(modifier: Modifier = Modifier) {
   val items = remember {
     listOf(
       DropdownItem(1, "EUR"),
@@ -231,5 +240,5 @@ fun DropdownScreen(modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun CurrenciesScreenPreview() {
-  CurrenciesScreen()
+  // CurrenciesScreen()
 }

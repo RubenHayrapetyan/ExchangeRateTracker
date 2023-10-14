@@ -1,6 +1,5 @@
 package com.exchange.rate.tracker.ui
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
@@ -17,7 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.res.colorResource
@@ -32,6 +29,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.exchange.rate.tracker.R
+import com.exchange.rate.tracker.components.HorizontalLine
 import com.exchange.rate.tracker.navigation.BottomBarScreen
 
 @Composable
@@ -42,20 +40,10 @@ fun BottomBar(navController: NavHostController) {
   )
   val navStackBackEntry by navController.currentBackStackEntryAsState()
   val currentDestination = navStackBackEntry?.destination
-  val outlineColor = colorResource(id = R.color.outline)
 
   Column(modifier = Modifier.background(color = colorResource(id = R.color.on_primary))) {
-    Canvas(
-      modifier = Modifier
-        .height(1.dp)
-        .fillMaxWidth()
-    ) {
-      drawLine(
-        color = outlineColor,
-        start = Offset(0f, 0f),
-        end = Offset(size.width, 0f),
-      )
-    }
+
+    HorizontalLine()
 
     Row(
       modifier = Modifier

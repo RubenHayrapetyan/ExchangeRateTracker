@@ -6,15 +6,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.exchange.rate.tracker.ui.currencies.CurrenciesScreen
 import com.exchange.rate.tracker.ui.favorites.FavoritesScreen
+import com.exchange.rate.tracker.ui.filters.FiltersScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
-  NavHost(navController, startDestination = BottomBarScreen.Currencies.route) {
+fun NavGraph(navHostController: NavHostController) {
+  NavHost(navHostController, startDestination = BottomBarScreen.Currencies.route) {
     composable(BottomBarScreen.Currencies.route) {
-      CurrenciesScreen()
+      CurrenciesScreen(navHostController = navHostController)
     }
     composable(BottomBarScreen.Favorites.route) {
       FavoritesScreen()
+    }
+    composable(Screen.FiltersScreen.route) {
+      FiltersScreen(navHostController = navHostController)
     }
   }
 }
