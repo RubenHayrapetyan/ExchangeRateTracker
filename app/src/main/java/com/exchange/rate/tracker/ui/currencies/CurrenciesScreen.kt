@@ -16,9 +16,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.NonRestartableComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,15 +35,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import com.exchange.rate.tracker.DropdownItem
+import com.exchange.rate.constants.Constants
 import com.exchange.rate.tracker.R
 import com.exchange.rate.tracker.util.noRippleClickable
-import com.exchange.rate.tracker.ui.CurrenciesContent
-import com.exchange.rate.tracker.util.Constants
 
 @Composable
-fun CurrenciesScreen(navHostController: NavHostController) {
+fun CurrenciesScreen(
+  navHostController: NavHostController,
+  viewModel: CurrenciesViewModel = hiltViewModel()
+) {
+
+  LaunchedEffect(key1 = Constants.BASE_CURRENCY_KEY) {
+    viewModel.getBaseCurrencies()
+  }
+
+  val error by viewModel.error
 
   ConstraintLayout(
     modifier = Modifier
@@ -48,8 +59,9 @@ fun CurrenciesScreen(navHostController: NavHostController) {
       .background(color = colorResource(id = R.color.on_primary))
   ) {
 
-    val (title, filter, dropDown, background, currencies) = createRefs()
+    val (title, filter, dropDown, background, currencies, errorMessage) = createRefs()
 
+    // This is for grey background
     Box(modifier = Modifier
       .constrainAs(background) {
         top.linkTo(parent.top)
@@ -75,18 +87,31 @@ fun CurrenciesScreen(navHostController: NavHostController) {
       color = colorResource(id = R.color.text_default)
     )
 
-    CurrenciesContent(
-      modifier = Modifier.constrainAs(currencies) {
-        top.linkTo(background.bottom, margin = 16.dp)
-        start.linkTo(parent.start, margin = 16.dp)
-        end.linkTo(parent.end, margin = 16.dp)
-        bottom.linkTo(parent.bottom)
-        width = Dimension.fillToConstraints
-        height = Dimension.fillToConstraints
-      }
-    )
+    if(error.isNotEmpty()) {
+      ErrorText(
+        modifier = Modifier.constrainAs(errorMessage) {
+          top.linkTo(background.bottom, margin = 16.dp)
+          start.linkTo(parent.start, margin = 16.dp)
+          end.linkTo(parent.end, margin = 16.dp)
+          width = Dimension.fillToConstraints
+        },
+        errorMessage = error
+      )
+    } else {
+      RatesContent(
+        modifier = Modifier.constrainAs(currencies) {
+          top.linkTo(background.bottom, margin = 16.dp)
+          start.linkTo(parent.start, margin = 16.dp)
+          end.linkTo(parent.end, margin = 16.dp)
+          bottom.linkTo(parent.bottom)
+          width = Dimension.fillToConstraints
+          height = Dimension.fillToConstraints
+        },
+        viewModel = viewModel
+      )
+    }
 
-    DropdownScreen(
+    Dropdown(
       modifier = Modifier
         .constrainAs(dropDown) {
           start.linkTo(parent.start, margin = 16.dp)
@@ -94,7 +119,8 @@ fun CurrenciesScreen(navHostController: NavHostController) {
           top.linkTo(title.bottom, margin = 12.dp)
           width = Dimension.fillToConstraints
         }
-        .heightIn(min = 48.dp)
+        .heightIn(min = 48.dp),
+      viewModel = viewModel,
     )
 
     Filter(
@@ -107,6 +133,15 @@ fun CurrenciesScreen(navHostController: NavHostController) {
       navHostController = navHostController
     )
   }
+}
+
+@NonRestartableComposable
+@Composable
+private fun ErrorText(modifier: Modifier = Modifier, errorMessage: String) {
+  Text(
+    modifier = modifier,
+    text = errorMessage
+  )
 }
 
 @Composable
@@ -135,13 +170,19 @@ private fun Filter(modifier: Modifier = Modifier, navHostController: NavHostCont
 }
 
 @Composable
-private fun CustomDropdownMenu(
+private fun Dropdown(
+  viewModel: CurrenciesViewModel,
   modifier: Modifier = Modifier,
-  items: List<DropdownItem>,
-  selectedItemId: Int,
-  onItemSelected: (Int) -> Unit
 ) {
+  val baseCurrencies by viewModel.baseCurrencies
+  if (baseCurrencies.isEmpty()) return
+
+  var selectedItemId by rememberSaveable { mutableStateOf(0) }
   var expanded by remember { mutableStateOf(false) }
+
+  LaunchedEffect(key1 = Constants.RATE_KEY) {
+    viewModel.getRates(selectedCurrency = baseCurrencies[selectedItemId])
+  }
 
   Column(
     modifier = modifier
@@ -159,7 +200,6 @@ private fun CustomDropdownMenu(
       ),
     verticalArrangement = Arrangement.Center
   ) {
-    val textColor = colorResource(id = R.color.text_default)
     val icArrow = if (expanded) {
       painterResource(id = R.drawable.ic_arrow_up)
     } else {
@@ -175,8 +215,8 @@ private fun CustomDropdownMenu(
     ) {
       Text(
         modifier = Modifier.weight(1f),
-        text = items.find { it.id == selectedItemId }?.label ?: "",
-        color = textColor,
+        text = baseCurrencies[selectedItemId],
+        color = colorResource(id = R.color.text_default),
         fontSize = 14.sp,
         fontWeight = FontWeight(500)
       )
@@ -189,52 +229,48 @@ private fun CustomDropdownMenu(
     }
 
     if (expanded) {
-      items.forEach { item ->
-        val selectedTextBackground = if (selectedItemId == item.id) {
-          colorResource(id = R.color.light_primary)
-        } else {
-          Color.Transparent
+      DropdownItem(
+        items = baseCurrencies,
+        selectedItemIndex = selectedItemId,
+        viewModel = viewModel,
+        onBaseCurrencySelected = { selectedBaseCurrency ->
+          expanded = false
+          selectedItemId = selectedBaseCurrency
         }
-
-        Text(
-          modifier = Modifier
-            .fillMaxWidth()
-            .background(color = selectedTextBackground)
-            .clickable {
-              expanded = false
-              onItemSelected.invoke(item.id)
-            }
-            .padding(16.dp),
-          text = item.label,
-          color = textColor,
-          fontSize = 14.sp,
-          fontWeight = FontWeight(500)
-        )
-      }
+      )
     }
   }
 }
 
 @Composable
-private fun DropdownScreen(modifier: Modifier = Modifier) {
-  val items = remember {
-    listOf(
-      DropdownItem(1, "EUR"),
-      DropdownItem(2, "USD"),
-      DropdownItem(3, "YAN")
+private fun DropdownItem(
+  items: List<String>,
+  selectedItemIndex: Int,
+  viewModel: CurrenciesViewModel,
+  onBaseCurrencySelected: (Int) -> Unit
+) {
+  items.forEachIndexed { index, item ->
+    val selectedTextBackground = if (selectedItemIndex == index) {
+      colorResource(id = R.color.light_primary)
+    } else {
+      Color.Transparent
+    }
+
+    Text(
+      modifier = Modifier
+        .fillMaxWidth()
+        .background(color = selectedTextBackground)
+        .clickable {
+          onBaseCurrencySelected.invoke(index)
+          viewModel.getRates(selectedCurrency = item)
+        }
+        .padding(16.dp),
+      text = item,
+      color = colorResource(id = R.color.text_default),
+      fontSize = 14.sp,
+      fontWeight = FontWeight(500)
     )
   }
-
-  var selectedItemId by remember { mutableStateOf(1) }
-
-  CustomDropdownMenu(
-    modifier = modifier,
-    items = items,
-    selectedItemId = selectedItemId,
-    onItemSelected = { itemId ->
-      selectedItemId = itemId
-    }
-  )
 }
 
 @Preview(showBackground = true)

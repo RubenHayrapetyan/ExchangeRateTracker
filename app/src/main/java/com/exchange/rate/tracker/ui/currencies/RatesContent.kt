@@ -1,4 +1,4 @@
-package com.exchange.rate.tracker.ui
+package com.exchange.rate.tracker.ui.currencies
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,28 +23,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.exchange.rate.tracker.CurrencyEntity
+import com.exchange.rate.entity.local.RateEntity
 import com.exchange.rate.tracker.R
 
 @Composable
-fun CurrenciesContent(modifier: Modifier = Modifier) {
-  val currencyList = listOf(
-    CurrencyEntity(1, "EUR", 2.34256, false),
-    CurrencyEntity(2, "USD", 1.325552, true),
-    CurrencyEntity(3, "YSN", 33.42, false),
-    CurrencyEntity(4, "YSN", 33.42, false),
-  )
+fun RatesContent(modifier: Modifier = Modifier, viewModel: CurrenciesViewModel) {
 
-  val currencies: List<CurrencyEntity> = remember { currencyList }
+  val ratesEntity by viewModel.rates
+  if (ratesEntity.isEmpty()) return
+
+  val rates: List<RateEntity> = remember { ratesEntity }
 
   LazyColumn(modifier = modifier) {
     items(
-      count = currencies.size,
+      count = rates.size,
       key = {
-        currencies[it].id
+        rates[it].rateName
       },
       itemContent = { index ->
-        CurrencyItem(currencyEntity = currencies[index])
+        RateItem(rateEntity = rates[index])
 
         Spacer(modifier = Modifier.padding(top = 8.dp))
       }
@@ -53,8 +50,8 @@ fun CurrenciesContent(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun CurrencyItem(currencyEntity: CurrencyEntity) {
-  val isSelected by remember { mutableStateOf(currencyEntity.isFavorite) }
+private fun RateItem(rateEntity: RateEntity) {
+  val isSelected by remember { mutableStateOf(rateEntity.isFavorite) }
 
   val textColor = colorResource(id = R.color.text_default)
   val favoriteIcon = if (isSelected) {
@@ -82,7 +79,7 @@ private fun CurrencyItem(currencyEntity: CurrencyEntity) {
       modifier = Modifier
         .padding(horizontal = 16.dp)
         .weight(0.3f),
-      text = currencyEntity.currencyName,
+      text = rateEntity.rateName,
       color = textColor,
       fontSize = 14.sp,
       fontStyle = FontStyle(500)
@@ -94,7 +91,7 @@ private fun CurrencyItem(currencyEntity: CurrencyEntity) {
         .padding(end = 16.dp), contentAlignment = Alignment.CenterEnd
     ) {
       Text(
-        text = "${currencyEntity.currencyValue}",
+        text = "${rateEntity.rateValue}",
         color = textColor,
         fontSize = 16.sp,
         fontStyle = FontStyle(600),
@@ -110,6 +107,5 @@ private fun CurrencyItem(currencyEntity: CurrencyEntity) {
       painter = favoriteIcon, contentDescription = "Favorite",
       tint = favoriteIconTint
     )
-
   }
 }

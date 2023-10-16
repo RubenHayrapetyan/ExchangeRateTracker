@@ -1,7 +1,7 @@
 package com.exchange.rate.tracker.navigation
 
+import com.exchange.rate.constants.Constants
 import com.exchange.rate.tracker.R
-import com.exchange.rate.tracker.util.Constants
 
 sealed class BottomBarScreen(val route: String, val title: Int, val icon: Int) {
   object Currencies : BottomBarScreen(

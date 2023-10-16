@@ -14,3 +14,7 @@ dependencyResolutionManagement {
 }
 rootProject.name = "ExchangeRateTracker"
 include ':app'
+include ':domain'
+include ':data'
+include ':constants'
+include ':entity'
