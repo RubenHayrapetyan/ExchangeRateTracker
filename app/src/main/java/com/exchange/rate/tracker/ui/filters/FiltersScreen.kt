@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,12 +31,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.exchange.rate.constants.Constants
+import com.exchange.rate.entity.FilterType
+import com.exchange.rate.entity.local.FilterModel
 import com.exchange.rate.tracker.R
 import com.exchange.rate.tracker.components.HorizontalLine
 import com.exchange.rate.tracker.components.TopBar
 
 @Composable
-fun FiltersScreen(navHostController: NavHostController) {
+fun FiltersScreen(
+  navHostController: NavHostController,
+  selectedFilterTypeOrdinal: Int = FilterType.FROM_A_TO_Z.ordinal
+) {
+
+  var selectedFilterType by rememberSaveable { mutableStateOf(selectedFilterTypeOrdinal) }
 
   Column(
     modifier = Modifier
@@ -62,36 +69,70 @@ fun FiltersScreen(navHostController: NavHostController) {
 
     Spacer(modifier = Modifier.height(12.dp))
 
-    FilterTypeContent()
+    FilterTypeContent(
+      selectedFilterTypeOrdinal = selectedFilterTypeOrdinal,
+      onFilterTypeSelected = {
+        selectedFilterType = it.filterType.ordinal
+      }
+    )
 
     Spacer(modifier = Modifier.weight(1f))
 
-    ApplyButton()
-  }
-}
-
-@Composable
-private fun FilterTypeContent() {
-  val filterTypes = listOf(
-    stringResource(id = R.string.filter_a_to_z),
-    stringResource(id = R.string.filter_z_to_a),
-    stringResource(id = R.string.filter_asc),
-    stringResource(id = R.string.filter_desc)
-  )
-
-  var selectedItem by rememberSaveable { mutableStateOf(filterTypes[0]) }
-
-  filterTypes.forEach { typeName ->
-    FilterTypeItem(
-      typeName = typeName,
-      isSelected = typeName == selectedItem,
-      onSelected = { selectedItem = typeName }
+    ApplyButton(
+      navHostController = navHostController,
+      selectedFilterTypeOrdinal = selectedFilterType
     )
   }
 }
 
 @Composable
-private fun FilterTypeItem(typeName: String, isSelected: Boolean, onSelected: () -> Unit) {
+private fun FilterTypeContent(
+  selectedFilterTypeOrdinal: Int,
+  onFilterTypeSelected: (FilterModel) -> Unit
+) {
+  val filterModelTypes = listOf(
+    FilterModel(
+      filterName = stringResource(id = R.string.filter_a_to_z),
+      filterType = FilterType.FROM_A_TO_Z,
+      isSelected = true
+    ),
+    FilterModel(
+      filterName = stringResource(id = R.string.filter_z_to_a),
+      filterType = FilterType.FROM_Z_TO_A,
+      isSelected = false
+    ),
+    FilterModel(
+      filterName = stringResource(id = R.string.filter_asc),
+      filterType = FilterType.INCREASING_VALUE,
+      isSelected = false
+    ),
+    FilterModel(
+      filterName = stringResource(id = R.string.filter_desc),
+      filterType = FilterType.DECREASING_VALUE,
+      isSelected = false
+    )
+  )
+
+  var selectedItem by rememberSaveable { mutableStateOf(filterModelTypes[selectedFilterTypeOrdinal].filterName) }
+
+  filterModelTypes.forEach { filter ->
+    FilterTypeItem(
+      filterModel = filter,
+      isSelected = filter.filterName == selectedItem,
+      onFilterTypeSelected = {
+        onFilterTypeSelected.invoke(it)
+        selectedItem = it.filterName
+      }
+    )
+  }
+}
+
+@Composable
+private fun FilterTypeItem(
+  isSelected: Boolean,
+  filterModel: FilterModel,
+  onFilterTypeSelected: (FilterModel) -> Unit
+) {
   Row(
     modifier = Modifier
       .fillMaxWidth()
@@ -101,7 +142,7 @@ private fun FilterTypeItem(typeName: String, isSelected: Boolean, onSelected: ()
   ) {
     Text(
       modifier = Modifier.weight(1f),
-      text = typeName,
+      text = filterModel.filterName,
       fontSize = 16.sp,
       fontWeight = FontWeight(500),
       color = colorResource(id = R.color.text_default)
@@ -109,7 +150,9 @@ private fun FilterTypeItem(typeName: String, isSelected: Boolean, onSelected: ()
 
     RadioButton(
       selected = isSelected,
-      onClick = { onSelected() },
+      onClick = {
+        onFilterTypeSelected(filterModel)
+      },
       colors = RadioButtonDefaults.colors(
         selectedColor = colorResource(id = R.color.primary),
         unselectedColor = colorResource(id = R.color.secondary)
@@ -119,7 +162,10 @@ private fun FilterTypeItem(typeName: String, isSelected: Boolean, onSelected: ()
 }
 
 @Composable
-private fun ApplyButton() {
+private fun ApplyButton(
+  navHostController: NavHostController,
+  selectedFilterTypeOrdinal: Int
+) {
   Box(
     modifier = Modifier
       .fillMaxWidth()
@@ -127,10 +173,17 @@ private fun ApplyButton() {
     contentAlignment = Alignment.BottomCenter
   ) {
     Button(
-      onClick = { /* Handle button click */ },
+      onClick = {
+        navHostController.previousBackStackEntry
+          ?.savedStateHandle
+          ?.set(
+            key = Constants.ARG_FILTER,
+            value = selectedFilterTypeOrdinal
+          )
+        navHostController.popBackStack()
+      },
       modifier = Modifier
         .fillMaxWidth()
-
         .background(
           color = colorResource(id = R.color.primary),
           shape = RoundedCornerShape(100.dp)

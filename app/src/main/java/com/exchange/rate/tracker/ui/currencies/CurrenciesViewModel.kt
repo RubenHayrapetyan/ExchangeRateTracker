@@ -1,5 +1,6 @@
 package com.exchange.rate.tracker.ui.currencies
 
+import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -11,9 +12,11 @@ import com.exchange.rate.domain.usecase.GetCurrenciesUseCase
 import com.exchange.rate.domain.usecase.InsertRatesUseCase
 import com.exchange.rate.domain.usecase.UnFavoriteRateUseCase
 import com.exchange.rate.entity.ActionResult
+import com.exchange.rate.entity.FilterType
 import com.exchange.rate.entity.local.RateEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -26,6 +29,8 @@ class CurrenciesViewModel @Inject constructor(
   private val insertRatesUseCase: InsertRatesUseCase,
   private val getAllFavoriteRatesUseCase: GetAllFavoriteRatesUseCase
 ) : ViewModel() {
+
+  val favoriteRates2 = mutableStateOf<Set<String>>(emptySet())
 
   private val _baseCurrencies by lazy { mutableStateOf<List<String>>(emptyList()) }
   val baseCurrencies: State<List<String>> = _baseCurrencies
@@ -47,14 +52,47 @@ class CurrenciesViewModel @Inject constructor(
     }
   }
 
-  fun getRates(selectedCurrency: String) {
+//  private fun getNewRatesAndMakeFavorite() : List<RateEntity> {
+//      viewModelScope.launch {
+//        getAllFavoriteRatesUseCase().collectLatest { favoriteRates ->
+//           val oldFavorite = favoriteRates.filter {
+//              it.isFavorite
+//            }
+//
+//          //addAll(oldFavorite)
+//        }
+//      }
+//  }
+
+  private fun sortDataBySelectedFilter(
+    rates: List<RateEntity>,
+    filterTypeOrdinal: Int
+  ): List<RateEntity> {
+    return when (filterTypeOrdinal) {
+      FilterType.FROM_A_TO_Z.ordinal -> rates.sortedBy { it.rateName }
+      FilterType.FROM_Z_TO_A.ordinal -> rates.sortedByDescending { it.rateName }
+      FilterType.INCREASING_VALUE.ordinal -> rates.sortedBy { it.rateValue }
+      FilterType.DECREASING_VALUE.ordinal -> rates.sortedByDescending { it.rateValue }
+      else -> rates
+    }
+  }
+
+  fun getRates(selectedCurrency: String, filterTypeOrdinal: Int) {
     viewModelScope.launch {
       _error.value = ""
       getCurrenciesUseCase(selectedCurrency = selectedCurrency).let { result ->
         when (result) {
           is ActionResult.Success -> {
-            insertRatesUseCase(result.data)
-            _rates.value = result.data
+            val data = result.data
+            data.forEach { // TODO remove
+              if (it.isFavorite) {
+                Log.v("updatedRates", "viewModel favorite = ${it.rateName}")
+              }
+            }
+            val sortedData =
+              sortDataBySelectedFilter(rates = data, filterTypeOrdinal = filterTypeOrdinal)
+
+            _rates.value = sortedData
           }
 
           is ActionResult.Error -> {
@@ -72,12 +110,14 @@ class CurrenciesViewModel @Inject constructor(
   fun favoriteRate(rateName: String, baseRateName: String) {
     viewModelScope.launch {
       favoriteRateUseCase(rateName = rateName, baseRateName = baseRateName)
+      favoriteRates2.value = favoriteRates2.value + rateName
     }
   }
 
   fun unFavoriteRatesAndGetFavoriteRates(rateName: String) {
     viewModelScope.launch {
       unFavoriteRateUseCase(rateName = rateName)
+      favoriteRates2.value = favoriteRates2.value - rateName
       getAllFavoriteRates()
     }
   }

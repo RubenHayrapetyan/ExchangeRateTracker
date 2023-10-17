@@ -1,5 +1,6 @@
 package com.exchange.rate.tracker.ui.currencies
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -48,6 +49,7 @@ import com.exchange.rate.tracker.util.noRippleClickable
 @Composable
 fun CurrenciesScreen(
   navHostController: NavHostController,
+  filterTypeOrdinal: Int,
   viewModel: CurrenciesViewModel = hiltViewModel()
 ) {
 
@@ -105,7 +107,6 @@ fun CurrenciesScreen(
       val ratesEntity by viewModel.rates
 
       if (ratesEntity.isNotEmpty()) {
-        val rates: List<RateEntity> = remember { ratesEntity }
 
         RatesContent(
           modifier = Modifier.constrainAs(currencies) {
@@ -117,7 +118,7 @@ fun CurrenciesScreen(
             height = Dimension.fillToConstraints
           },
           viewModel = viewModel,
-          rates = rates
+          rates = ratesEntity
         )
       }
     }
@@ -132,6 +133,7 @@ fun CurrenciesScreen(
         }
         .heightIn(min = 48.dp),
       viewModel = viewModel,
+      filterTypeOrdinal = filterTypeOrdinal
     )
 
     Filter(
@@ -141,7 +143,8 @@ fun CurrenciesScreen(
           top.linkTo(title.bottom, margin = 12.dp)
         }
         .padding(bottom = 8.dp),
-      navHostController = navHostController
+      navHostController = navHostController,
+      filterTypeOrdinal = filterTypeOrdinal
     )
   }
 }
@@ -156,7 +159,11 @@ private fun ErrorText(modifier: Modifier = Modifier, errorMessage: String) {
 }
 
 @Composable
-private fun Filter(modifier: Modifier = Modifier, navHostController: NavHostController) {
+private fun Filter(
+  navHostController: NavHostController,
+  filterTypeOrdinal: Int,
+  modifier: Modifier = Modifier,
+) {
 
   IconButton(
     modifier = modifier
@@ -170,11 +177,12 @@ private fun Filter(modifier: Modifier = Modifier, navHostController: NavHostCont
         shape = RoundedCornerShape(8.dp)
       ),
     onClick = {
-      navHostController.navigate(Constants.FILTERS_ROUTE)
+      navHostController.navigate("${Constants.FILTERS_ROUTE}/$filterTypeOrdinal")
     }
   ) {
     Icon(
-      painter = painterResource(id = R.drawable.ic_filter), contentDescription = "Filter",
+      painter = painterResource(id = R.drawable.ic_filter),
+      contentDescription = "Filter",
       tint = colorResource(id = R.color.primary)
     )
   }
@@ -184,6 +192,7 @@ private fun Filter(modifier: Modifier = Modifier, navHostController: NavHostCont
 private fun Dropdown(
   viewModel: CurrenciesViewModel,
   modifier: Modifier = Modifier,
+  filterTypeOrdinal: Int
 ) {
   val baseCurrencies by viewModel.baseCurrencies
   if (baseCurrencies.isEmpty()) return
@@ -192,7 +201,10 @@ private fun Dropdown(
   var expanded by remember { mutableStateOf(false) }
 
   LaunchedEffect(key1 = Constants.RATE_KEY) {
-    viewModel.getRates(selectedCurrency = baseCurrencies[selectedItemId])
+    viewModel.getRates(
+      selectedCurrency = baseCurrencies[selectedItemId],
+      filterTypeOrdinal = filterTypeOrdinal
+    )
   }
 
   Column(
@@ -244,6 +256,7 @@ private fun Dropdown(
         items = baseCurrencies,
         selectedItemIndex = selectedItemId,
         viewModel = viewModel,
+        filterTypeOrdinal = filterTypeOrdinal,
         onBaseCurrencySelected = { selectedBaseCurrency ->
           expanded = false
           selectedItemId = selectedBaseCurrency
@@ -258,6 +271,7 @@ private fun DropdownItem(
   items: List<String>,
   selectedItemIndex: Int,
   viewModel: CurrenciesViewModel,
+  filterTypeOrdinal: Int,
   onBaseCurrencySelected: (Int) -> Unit
 ) {
   items.forEachIndexed { index, item ->
@@ -273,7 +287,7 @@ private fun DropdownItem(
         .background(color = selectedTextBackground)
         .clickable {
           onBaseCurrencySelected.invoke(index)
-          viewModel.getRates(selectedCurrency = item)
+          viewModel.getRates(selectedCurrency = item, filterTypeOrdinal = filterTypeOrdinal)
         }
         .padding(16.dp),
       text = item,
@@ -290,6 +304,9 @@ private fun RatesContent(
   viewModel: CurrenciesViewModel,
   rates: List<RateEntity>
 ) {
+
+//  val favoriteRates = viewModel.favoriteRates2.value
+//  val isSelected = rates.rateName in favoriteRates
 
   LazyColumn(modifier = modifier) {
     items(
@@ -311,7 +328,12 @@ private fun RatesContent(
 
 @Composable
 private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
-  var isSelected by remember { mutableStateOf(rateEntity.isFavorite) }
+//  var isSelected by rememberSaveable { mutableStateOf(rateEntity.isFavorite) }
+  val isSelected = rateEntity.isFavorite
+
+  if (isSelected) {
+    Log.v("updatedRates", "composable favorite = ${rateEntity.rateName}")
+  }
 
   val textColor = colorResource(id = R.color.text_default)
   val favoriteIcon = if (isSelected) {
@@ -371,9 +393,10 @@ private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
               baseRateName = "EUR"
             ) // TODO TODO TODO EUR make dynamic
           }
-          isSelected = !isSelected
+//          isSelected = !isSelected
         },
-      painter = favoriteIcon, contentDescription = "Favorite",
+      painter = favoriteIcon,
+      contentDescription = "Favorite",
       tint = favoriteIconTint
     )
   }

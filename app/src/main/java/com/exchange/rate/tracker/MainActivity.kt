@@ -48,15 +48,7 @@ private fun MainScreenView() {
   var showBottomBar by rememberSaveable { mutableStateOf(true) }
   val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-  showBottomBar = when (navBackStackEntry?.destination?.route) {
-    Constants.FILTERS_ROUTE -> {
-      false
-    }
-
-    else -> {
-      true
-    }
-  }
+  showBottomBar = navBackStackEntry?.destination?.route?.contains(Constants.FILTERS_ROUTE) != true
   
   Scaffold(
     bottomBar = {
