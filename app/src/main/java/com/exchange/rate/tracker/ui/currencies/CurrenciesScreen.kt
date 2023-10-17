@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +41,7 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.exchange.rate.constants.Constants
+import com.exchange.rate.entity.local.RateEntity
 import com.exchange.rate.tracker.R
 import com.exchange.rate.tracker.util.noRippleClickable
 
@@ -87,7 +91,7 @@ fun CurrenciesScreen(
       color = colorResource(id = R.color.text_default)
     )
 
-    if(error.isNotEmpty()) {
+    if (error.isNotEmpty()) {
       ErrorText(
         modifier = Modifier.constrainAs(errorMessage) {
           top.linkTo(background.bottom, margin = 16.dp)
@@ -98,17 +102,24 @@ fun CurrenciesScreen(
         errorMessage = error
       )
     } else {
-      RatesContent(
-        modifier = Modifier.constrainAs(currencies) {
-          top.linkTo(background.bottom, margin = 16.dp)
-          start.linkTo(parent.start, margin = 16.dp)
-          end.linkTo(parent.end, margin = 16.dp)
-          bottom.linkTo(parent.bottom)
-          width = Dimension.fillToConstraints
-          height = Dimension.fillToConstraints
-        },
-        viewModel = viewModel
-      )
+      val ratesEntity by viewModel.rates
+
+      if (ratesEntity.isNotEmpty()) {
+        val rates: List<RateEntity> = remember { ratesEntity }
+
+        RatesContent(
+          modifier = Modifier.constrainAs(currencies) {
+            top.linkTo(background.bottom, margin = 16.dp)
+            start.linkTo(parent.start, margin = 16.dp)
+            end.linkTo(parent.end, margin = 16.dp)
+            bottom.linkTo(parent.bottom)
+            width = Dimension.fillToConstraints
+            height = Dimension.fillToConstraints
+          },
+          viewModel = viewModel,
+          rates = rates
+        )
+      }
     }
 
     Dropdown(
@@ -269,6 +280,101 @@ private fun DropdownItem(
       color = colorResource(id = R.color.text_default),
       fontSize = 14.sp,
       fontWeight = FontWeight(500)
+    )
+  }
+}
+
+@Composable
+private fun RatesContent(
+  modifier: Modifier = Modifier,
+  viewModel: CurrenciesViewModel,
+  rates: List<RateEntity>
+) {
+
+  LazyColumn(modifier = modifier) {
+    items(
+      count = rates.size,
+      key = {
+        rates[it].rateName
+      },
+      itemContent = { index ->
+        RateItem(
+          rateEntity = rates[index],
+          viewModel = viewModel
+        )
+
+        Spacer(modifier = Modifier.padding(top = 8.dp))
+      }
+    )
+  }
+}
+
+@Composable
+private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
+  var isSelected by remember { mutableStateOf(rateEntity.isFavorite) }
+
+  val textColor = colorResource(id = R.color.text_default)
+  val favoriteIcon = if (isSelected) {
+    painterResource(id = R.drawable.ic_favorites_on)
+  } else {
+    painterResource(id = R.drawable.ic_favorites_off)
+  }
+  val favoriteIconTint = if (isSelected) {
+    colorResource(id = R.color.yellow)
+  } else {
+    colorResource(id = R.color.secondary)
+  }
+
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .background(
+        color = colorResource(id = R.color.bg_card),
+        shape = RoundedCornerShape(12.dp)
+      )
+      .padding(vertical = 12.dp),
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Text(
+      modifier = Modifier
+        .padding(horizontal = 16.dp)
+        .weight(0.3f),
+      text = rateEntity.rateName,
+      color = textColor,
+      fontSize = 14.sp,
+      fontStyle = FontStyle(500)
+    )
+
+    Box(
+      modifier = Modifier
+        .weight(0.5f)
+        .padding(end = 16.dp),
+      contentAlignment = Alignment.CenterEnd
+    ) {
+      Text(
+        text = "${rateEntity.rateValue}",
+        color = textColor,
+        fontSize = 16.sp,
+        fontStyle = FontStyle(600),
+      )
+    }
+
+    Icon(
+      modifier = Modifier
+        .padding(end = 16.dp)
+        .clickable {
+          if (isSelected) {
+            viewModel.unFavoriteRatesAndGetFavoriteRates(rateName = rateEntity.rateName)
+          } else {
+            viewModel.favoriteRate(
+              rateName = rateEntity.rateName,
+              baseRateName = "EUR"
+            ) // TODO TODO TODO EUR make dynamic
+          }
+          isSelected = !isSelected
+        },
+      painter = favoriteIcon, contentDescription = "Favorite",
+      tint = favoriteIconTint
     )
   }
 }

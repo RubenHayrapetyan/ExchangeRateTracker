@@ -20,7 +20,7 @@ import com.exchange.rate.tracker.R
 @Composable
 fun TopBar(
   modifier: Modifier = Modifier,
-  navHostController: NavHostController,
+  navHostController: NavHostController? = null,
   title: String,
   isBackEnabled: Boolean
 ) {
@@ -31,7 +31,7 @@ fun TopBar(
       if (isBackEnabled) {
         IconButton(
           onClick = {
-            navHostController.popBackStack()
+            navHostController?.popBackStack()
           }
         ) {
           Icon(
