@@ -91,10 +91,17 @@ class CurrenciesViewModel @Inject constructor(
           }
 
           is ActionResult.Error -> {
-            result.e.message?.let {
-              _error.value = it
-            } ?: run {
-              _error.value = "Something went wrong"
+            val errorCode: String? = result.errorCode
+            val errorMessage: String? = result.errorMessage
+            if (errorCode == null && errorMessage == null) {
+              result.e?.message?.let {
+                _error.value = it
+              } ?: run {
+                _error.value = "Something went wrong"
+              }
+            } else {
+              val fullError = "Error code: ${errorCode}, Message:${errorMessage}"
+              _error.value = fullError
             }
           }
         }

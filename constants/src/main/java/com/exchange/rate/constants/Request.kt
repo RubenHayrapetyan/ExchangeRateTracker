@@ -5,5 +5,4 @@ object Request {
   const val LATEST_PATH = "latest?"
   const val ACCESS_KEY_PATH = "access_key="
   const val ACCESS_KEY = "ba001b292b4834c8e843dc68fcad5c50"
-  const val BASE_PATH = "&base="
 }

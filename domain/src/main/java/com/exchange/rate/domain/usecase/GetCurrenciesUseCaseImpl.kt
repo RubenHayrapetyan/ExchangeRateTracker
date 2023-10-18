@@ -43,7 +43,7 @@ class GetCurrenciesUseCaseImpl @Inject constructor(
 
               ActionResult.Success(data = rates)
             } else {
-              ActionResult.Error(Throwable("Something went wrong"))
+              ActionResult.Error(errorMessage = "Something went wrong", errorCode = "")
             }
           }
 
