@@ -284,6 +284,7 @@ private fun DropdownItem(
         .fillMaxWidth()
         .background(color = selectedTextBackground)
         .clickable {
+          viewModel.selectBaseCurrency(baseCurrency = item)
           onBaseCurrencySelected.invoke(index)
           viewModel.getRates(selectedCurrency = item, filterTypeOrdinal = filterTypeOrdinal)
         }
@@ -325,6 +326,7 @@ private fun RatesContent(
 private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
   val isFavorite = viewModel.favoriteList.contains(rateEntity.rateName)
   var isSelected by remember { mutableStateOf(isFavorite) }
+  val selectedBaseCurrency by viewModel.selectedBaseCurrency
 
   val textColor = colorResource(id = R.color.text_default)
   val favoriteIcon = if (isSelected) {
@@ -381,8 +383,8 @@ private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
           } else {
             viewModel.favoriteRate(
               rateName = rateEntity.rateName,
-              baseRateName = "EUR"
-            ) // TODO TODO TODO EUR make dynamic
+              baseRateName = selectedBaseCurrency
+            )
           }
           isSelected = !isSelected
         },

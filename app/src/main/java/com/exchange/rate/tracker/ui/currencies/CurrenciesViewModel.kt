@@ -1,6 +1,5 @@
 package com.exchange.rate.tracker.ui.currencies
 
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -32,6 +31,9 @@ class CurrenciesViewModel @Inject constructor(
   private val _baseCurrencies by lazy { mutableStateOf<List<String>>(emptyList()) }
   val baseCurrencies: State<List<String>> = _baseCurrencies
 
+  private val _selectedBaseCurrency by lazy { mutableStateOf("") }
+  val selectedBaseCurrency: State<String> = _selectedBaseCurrency
+
   private val _rates by lazy { mutableStateOf<List<RateEntity>>(emptyList()) }
   val rates: State<List<RateEntity>> = _rates
 
@@ -43,11 +45,16 @@ class CurrenciesViewModel @Inject constructor(
 
   val favoriteList = mutableListOf<String>()
 
+  fun selectBaseCurrency(baseCurrency: String) {
+    _selectedBaseCurrency.value = baseCurrency
+  }
+
   fun getBaseCurrencies() {
     viewModelScope.launch {
       getBaseCurrenciesUseCase().collectLatest { currencies ->
         _baseCurrencies.value = currencies
       }
+      _selectedBaseCurrency.value = _baseCurrencies.value.first()
     }
   }
 
@@ -66,10 +73,10 @@ class CurrenciesViewModel @Inject constructor(
 
   fun getRates(selectedCurrency: String, filterTypeOrdinal: Int) {
     viewModelScope.launch {
-      _error.value = ""
       getCurrenciesUseCase(selectedCurrency = selectedCurrency).let { result ->
         when (result) {
           is ActionResult.Success -> {
+            _error.value = ""
             val data = result.data
             val updatedNewRates = updateNewRatesWithOldRates(
               newRates = data,
