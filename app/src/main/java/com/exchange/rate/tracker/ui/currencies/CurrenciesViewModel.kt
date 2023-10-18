@@ -9,12 +9,12 @@ import com.exchange.rate.domain.usecase.FavoriteRateUseCase
 import com.exchange.rate.domain.usecase.GetAllFavoriteRatesUseCase
 import com.exchange.rate.domain.usecase.GetBaseCurrenciesUseCase
 import com.exchange.rate.domain.usecase.GetCurrenciesUseCase
-import com.exchange.rate.domain.usecase.InsertRatesUseCase
 import com.exchange.rate.domain.usecase.UnFavoriteRateUseCase
 import com.exchange.rate.entity.ActionResult
 import com.exchange.rate.entity.FilterType
 import com.exchange.rate.entity.local.RateEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -26,11 +26,8 @@ class CurrenciesViewModel @Inject constructor(
   private val getCurrenciesUseCase: GetCurrenciesUseCase,
   private val unFavoriteRateUseCase: UnFavoriteRateUseCase,
   private val favoriteRateUseCase: FavoriteRateUseCase,
-  private val insertRatesUseCase: InsertRatesUseCase,
   private val getAllFavoriteRatesUseCase: GetAllFavoriteRatesUseCase
 ) : ViewModel() {
-
-  val favoriteRates2 = mutableStateOf<Set<String>>(emptySet())
 
   private val _baseCurrencies by lazy { mutableStateOf<List<String>>(emptyList()) }
   val baseCurrencies: State<List<String>> = _baseCurrencies
@@ -44,6 +41,8 @@ class CurrenciesViewModel @Inject constructor(
   private val _error by lazy { mutableStateOf("") }
   val error: State<String> = _error
 
+  val favoriteList = mutableListOf<String>()
+
   fun getBaseCurrencies() {
     viewModelScope.launch {
       getBaseCurrenciesUseCase().collectLatest { currencies ->
@@ -51,18 +50,6 @@ class CurrenciesViewModel @Inject constructor(
       }
     }
   }
-
-//  private fun getNewRatesAndMakeFavorite() : List<RateEntity> {
-//      viewModelScope.launch {
-//        getAllFavoriteRatesUseCase().collectLatest { favoriteRates ->
-//           val oldFavorite = favoriteRates.filter {
-//              it.isFavorite
-//            }
-//
-//          //addAll(oldFavorite)
-//        }
-//      }
-//  }
 
   private fun sortDataBySelectedFilter(
     rates: List<RateEntity>,
@@ -84,14 +71,15 @@ class CurrenciesViewModel @Inject constructor(
         when (result) {
           is ActionResult.Success -> {
             val data = result.data
-            data.forEach { // TODO remove
-              if (it.isFavorite) {
-                Log.v("updatedRates", "viewModel favorite = ${it.rateName}")
-              }
-            }
+            val updatedNewRates = updateNewRatesWithOldRates(
+              newRates = data,
+              oldRatesFlow = getAllFavoriteRatesUseCase()
+            )
             val sortedData =
-              sortDataBySelectedFilter(rates = data, filterTypeOrdinal = filterTypeOrdinal)
-
+              sortDataBySelectedFilter(
+                rates = updatedNewRates,
+                filterTypeOrdinal = filterTypeOrdinal
+              )
             _rates.value = sortedData
           }
 
@@ -110,14 +98,14 @@ class CurrenciesViewModel @Inject constructor(
   fun favoriteRate(rateName: String, baseRateName: String) {
     viewModelScope.launch {
       favoriteRateUseCase(rateName = rateName, baseRateName = baseRateName)
-      favoriteRates2.value = favoriteRates2.value + rateName
+      favoriteList.add(rateName)
     }
   }
 
   fun unFavoriteRatesAndGetFavoriteRates(rateName: String) {
     viewModelScope.launch {
       unFavoriteRateUseCase(rateName = rateName)
-      favoriteRates2.value = favoriteRates2.value - rateName
+      favoriteList.removeIf { it == rateName }
       getAllFavoriteRates()
     }
   }
@@ -125,8 +113,32 @@ class CurrenciesViewModel @Inject constructor(
   fun getAllFavoriteRates() {
     viewModelScope.launch {
       getAllFavoriteRatesUseCase().collectLatest {
+        it.forEach {
+          favoriteList.add(it.rateName)
+        }
         _favoriteRates.value = it
       }
+    }
+  }
+
+  private suspend fun updateNewRatesWithOldRates(
+    newRates: List<RateEntity>,
+    oldRatesFlow: Flow<List<RateEntity>>
+  ): List<RateEntity> {
+
+    favoriteList.clear()
+
+    val oldRatesList = oldRatesFlow.first()
+    // Create a set of rate names from the oldRatesList
+    val oldRateNames = oldRatesList.map { it.rateName }
+
+    // Update the newRates by setting isFavorite to true for items in oldRatesList
+    return newRates.map { rate ->
+      val isOldRateFavorite = oldRateNames.contains(rate.rateName)
+      if (isOldRateFavorite) {
+        favoriteList.add(rate.rateName)
+      }
+      rate.copy(isFavorite = isOldRateFavorite)
     }
   }
 }

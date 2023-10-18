@@ -93,23 +93,19 @@ private fun FilterTypeContent(
   val filterModelTypes = listOf(
     FilterModel(
       filterName = stringResource(id = R.string.filter_a_to_z),
-      filterType = FilterType.FROM_A_TO_Z,
-      isSelected = true
+      filterType = FilterType.FROM_A_TO_Z
     ),
     FilterModel(
       filterName = stringResource(id = R.string.filter_z_to_a),
-      filterType = FilterType.FROM_Z_TO_A,
-      isSelected = false
+      filterType = FilterType.FROM_Z_TO_A
     ),
     FilterModel(
       filterName = stringResource(id = R.string.filter_asc),
-      filterType = FilterType.INCREASING_VALUE,
-      isSelected = false
+      filterType = FilterType.INCREASING_VALUE
     ),
     FilterModel(
       filterName = stringResource(id = R.string.filter_desc),
-      filterType = FilterType.DECREASING_VALUE,
-      isSelected = false
+      filterType = FilterType.DECREASING_VALUE
     )
   )
 

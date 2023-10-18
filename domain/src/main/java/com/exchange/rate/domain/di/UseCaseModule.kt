@@ -8,8 +8,6 @@ import com.exchange.rate.domain.usecase.GetBaseCurrenciesUseCase
 import com.exchange.rate.domain.usecase.GetBaseCurrenciesUseCaseImpl
 import com.exchange.rate.domain.usecase.GetCurrenciesUseCase
 import com.exchange.rate.domain.usecase.GetCurrenciesUseCaseImpl
-import com.exchange.rate.domain.usecase.InsertRatesUseCase
-import com.exchange.rate.domain.usecase.InsertRatesUseCaseImpl
 import com.exchange.rate.domain.usecase.UnFavoriteRateUseCase
 import com.exchange.rate.domain.usecase.UnFavoriteRateUseCaseImpl
 import dagger.Binds
@@ -31,9 +29,6 @@ internal abstract class UseCaseModule {
 
   @Binds
   abstract fun bindGetAllFavoriteRateUseCase(useCase: GetAllFavoriteRatesUseCaseImpl): GetAllFavoriteRatesUseCase
-
-  @Binds
-  abstract fun bindInsertRatesUseCase(useCase: InsertRatesUseCaseImpl): InsertRatesUseCase
 
   @Binds
   abstract fun bindUnFavoriteRatesUseCase(useCase: UnFavoriteRateUseCaseImpl): UnFavoriteRateUseCase

@@ -6,10 +6,6 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class RateRepoImpl @Inject constructor(private val rateDao: RateDao): RateRepo {
-  override suspend fun insertRates(rates: List<RateEntity>) {
-    rateDao.insertRates(rates = rates.toTypedArray())
-  }
-
   override suspend fun favoriteRate(rateName: String, baseRateName: String) {
     rateDao.favoriteRate(rateName = rateName, baseRateName = baseRateName)
   }

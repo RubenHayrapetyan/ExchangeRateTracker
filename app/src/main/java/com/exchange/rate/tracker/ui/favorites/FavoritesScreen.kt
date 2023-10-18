@@ -24,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.exchange.rate.constants.Constants
 import com.exchange.rate.entity.local.RateEntity
 import com.exchange.rate.tracker.R
@@ -33,7 +32,7 @@ import com.exchange.rate.tracker.components.TopBar
 import com.exchange.rate.tracker.ui.currencies.CurrenciesViewModel
 
 @Composable
-fun FavoritesScreen(viewModel: CurrenciesViewModel = hiltViewModel()) {
+fun FavoritesScreen(viewModel: CurrenciesViewModel) {
 
   LaunchedEffect(key1 = Constants.FAVORITE_RATE_KEY) {
     viewModel.getAllFavoriteRates()

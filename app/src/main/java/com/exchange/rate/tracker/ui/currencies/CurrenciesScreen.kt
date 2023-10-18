@@ -1,6 +1,5 @@
 package com.exchange.rate.tracker.ui.currencies
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.exchange.rate.constants.Constants
 import com.exchange.rate.entity.local.RateEntity
@@ -50,7 +48,7 @@ import com.exchange.rate.tracker.util.noRippleClickable
 fun CurrenciesScreen(
   navHostController: NavHostController,
   filterTypeOrdinal: Int,
-  viewModel: CurrenciesViewModel = hiltViewModel()
+  viewModel: CurrenciesViewModel
 ) {
 
   LaunchedEffect(key1 = Constants.BASE_CURRENCY_KEY) {
@@ -305,9 +303,6 @@ private fun RatesContent(
   rates: List<RateEntity>
 ) {
 
-//  val favoriteRates = viewModel.favoriteRates2.value
-//  val isSelected = rates.rateName in favoriteRates
-
   LazyColumn(modifier = modifier) {
     items(
       count = rates.size,
@@ -328,12 +323,8 @@ private fun RatesContent(
 
 @Composable
 private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
-//  var isSelected by rememberSaveable { mutableStateOf(rateEntity.isFavorite) }
-  val isSelected = rateEntity.isFavorite
-
-  if (isSelected) {
-    Log.v("updatedRates", "composable favorite = ${rateEntity.rateName}")
-  }
+  val isFavorite = viewModel.favoriteList.contains(rateEntity.rateName)
+  var isSelected by remember { mutableStateOf(isFavorite) }
 
   val textColor = colorResource(id = R.color.text_default)
   val favoriteIcon = if (isSelected) {
@@ -393,7 +384,7 @@ private fun RateItem(rateEntity: RateEntity, viewModel: CurrenciesViewModel) {
               baseRateName = "EUR"
             ) // TODO TODO TODO EUR make dynamic
           }
-//          isSelected = !isSelected
+          isSelected = !isSelected
         },
       painter = favoriteIcon,
       contentDescription = "Favorite",

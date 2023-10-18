@@ -4,6 +4,5 @@ import com.exchange.rate.entity.FilterType
 
 data class FilterModel(
   val filterName: String,
-  val filterType: FilterType,
-  val isSelected: Boolean
+  val filterType: FilterType
 )
